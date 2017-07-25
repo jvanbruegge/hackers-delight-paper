@@ -21,10 +21,31 @@ The seperation between those two creates a few problems:
 
 \item{No easy use of multiple lanugages, especially running tests written in multiple languages is hard as testing tools expect Javacript input}
 
-\item{New syntaxes have to be added to all languages individually, for example JSX which was introduced by Facebook was not usable in Typescript for a long time, because Facebook only implemented support in Babel}
+\item{New syntaxes have to be added to all languages individually, for example JSX which was introduced by Facebook and not usable in Typescript for a long time, because Facebook only implemented support in Babel}
 
 \end{itemize}
 
 The fact that most tools are written in Javascript also leads to problems, because Javascript only has limited concurrency and is slow to execute even with modern virtual machines (VM).
 
-To fix those problems, the goal of this paper is to develop a new compiler whose design allows being extended by modules to add new syntaxes to existing languages with minmal efford.
+To fix those problems, the goal of this paper is to develop a new compiler whose design allows being extended by modules to add new syntaxes to existing languages with minmal efford. To make implementation easier and performance better, the compiler will be written in Haskell.
+
+\section{Design of the compiler}
+
+\subsection{Classic compiler pipeline}
+
+A classic compiler is implemented as a pipeline of three to five distinct parts (see figure \ref{fig:compiler_pipeline}).
+
+\begin{figure}[H]
+\includegraphics[width=\columnwidth]{./compiler_pipeline.png}
+\caption{A classic compiler pipeline}
+\label{fig:compiler_pipeline}
+\end{figure}
+
+The compiler described in this paper also uses a pipeline approach, but with different steps (see figure \ref{fig:pack.hs_pipeline}).
+
+\begin{figure}[H]
+\includegraphics[width=\columnwidth]{./pack_hs_pipeline.png}
+\caption{A classic compiler pipeline}
+\label{fig:pack.hs_pipeline}
+\end{figure}
+

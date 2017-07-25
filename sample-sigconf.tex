@@ -1,4 +1,7 @@
-\documentclass[sigconf]{acmart}
+\documentclass[sigconf, authorversion]{acmart}
+\makeatletter
+\renewcommand\@formatdoi[1]{\ignorespaces}
+\makeatother
 
 
 \usepackage{booktabs} % For formal tables
@@ -14,9 +17,6 @@
 %\setcopyright{cagov}
 %\setcopyright{cagovmixed}
 
-
-% DOI
-\acmDOI{10.475/123_4}
 
 % ISBN
 %\acmISBN{123-4567-24-567/08/06}

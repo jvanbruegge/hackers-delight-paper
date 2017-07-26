@@ -66,7 +66,7 @@ expression ::= literal | expression operator expression;
 operator ::= '+' | '-' | '===';
 \end{lstlisting}
 
-This grammar represents a small subset of Typescript. A similar grammar is used in the current implementation. Because of the lazy nature of Haskell parsing this self-recursive definition is comparable easy.
+This grammar represents a small subset of Typescript. A similar grammar is used in the current implementation.
 
 \subsection{Compiler pipeline}
 \label{sec:pipeline}
@@ -95,6 +95,24 @@ The compiler described in this paper also uses a pipeline approach, but with dif
 
 Here the compiler first collects the grammar files from the plugins. In the current proof of concept implementation, this is just one typescript syntax file. Those grammars are then parsed into a special ABNF grammar AST\@.
 
-This AST is then used to generate a source code parser at runtime, which takes the source code and parses it into an AST\@. To simplify the implementation, there is no type checking done yet.
+This AST is then used to generate a source code parser at runtime, which takes the source code and parses it into an AST\@. To simplify the implementation, there is no type checking done yet. This AST is piped through a bunch of transforming functions which come from the plugins. Those transforms are what compiles the code.
 
 The last step again is code generation, which transforms the AST into obfuscated and minified Javascript code.
+
+\section{Implementation}
+
+\subsection{Host language}
+
+The compiler is written in Haskell, because of several advantages:
+
+\begin{itemize}
+
+\item{The lazy nature of Haskell allows for easy parsing of self-recursive grammars}
+\item{Later in the project, the compiler can make use of the parallelism built into the Haskell runtime to compile multiple files at the same time.}
+\item{Haskell is a compiled language, so the final execution does not suffer performance hits introduced by parsing and interpreting}
+\item{Haskell's strong type system makes debugging code a lot easier, because most of the errors are already caught by the compiler}
+\item{GHCI, Haskell's interactive interpreting compiler allows to test functions in isolation before inserting them into the program}
+\item{The monadic approach and the accompanying \textit{do} notation make composing complex parsers out of simple ones easy}
+\item{Parsing libraries for Haskell are feature-rich and very mature, this compiler uses \textit{Megaparsec}}
+
+\end{itemize}

@@ -49,9 +49,27 @@ The same syntax is also useful in Typescript, as Typescript is a typed superset 
 
 As the used plugins are configured at runtime, the final AST definition is not known at runtime. A core plugin should be able to be used together with a extention plugin that was written after the core plugin without having to modify or recompile the core plugin.
 
-To allow this, the compiler only has one abstract data type (ADT) representing a grammar in  augmented Backus–Naur form (ABNF). The plugins provide grammar files that are then parsed by the compiler to construct the final AST (see section~\ref{sec:pack_pipeline}).
+To allow this, the compiler only has one abstract data type (ADT) representing a grammar in  augmented Backus--Naur form (ABNF, see listing~\ref{lst:ABNF} as example). The plugins provide grammar files that are then parsed by the compiler to construct the final AST (see section~\ref{sec:pipeline}).
 
-\subsection{Classic compiler pipeline}
+\begin{lstlisting}[linewidth=\columnwidth, caption={Simple example of ABNF grammar}, captionpos=b, label=lst:ABNF]
+S ::= function;
+function ::= 'function' IDENTIFIER '(' [arguments] ')' block;
+arguments ::= argument [additionalArguments];
+additionalArguments ::= ',' argument [additionalArguments];
+argument ::= IDENTIFIER typeDeclaration | IDENTIFIER;
+block ::= '{' statement* '}';
+typeDeclaration ::= ':' type;
+type ::= 'boolean' | 'string' | 'number';
+statement ::= 'return' expression [';'];
+literal ::= '"' LITERAL '"' | LITERAL | 'true' | 'false';
+expression ::= literal | expression operator expression;
+operator ::= '+' | '-' | '===';
+\end{lstlisting}
+
+This grammar represents a small subset of Typescript. A similar grammar is used in the current implementation. Because of the lazy nature of Haskell parsing this self-recursive definition is comparable easy.
+
+\subsection{Compiler pipeline}
+\label{sec:pipeline}
 
 A classic compiler is implemented as a pipeline of three to five distinct parts (see figure~\ref{fig:compiler_pipeline}).
 
@@ -66,9 +84,6 @@ The lexing step takes the source code to be parsed, together with a Chomsky type
 A Parser then takes those tokens and a Chomsky type 2 grammar to parse an AST\@. This AST can optionally be type checked before it is transformed into the target language. In the context of the web, this most likely Javascript.
 
 In the code generation step, the AST is written into a target file, for Javascript this is another text file. Most of the time this also includes a minification step, where the compiler replaces names with short, obfuscated versions and omits as much whitespace as possible.
-
-\subsection{Pipeline used in pack.hs}
-\label{sec:pack_pipeline}
 
 The compiler described in this paper also uses a pipeline approach, but with different steps (see figure~\ref{fig:pack.hs_pipeline}).
 

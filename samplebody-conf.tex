@@ -29,6 +29,28 @@ To fix those problems, the goal of this paper is to develop a new compiler whose
 
 \section{Design of the compiler}
 
+\subsection{Dynamic AST definition}
+
+The compiler should allow plugins to add syntax to the definitions of other plugins. This means that every plugin, be it a core plugin implementing a certain language like Typescript or an extention plugin that augments existing core plugins, is allowed to add grammar to the AST definition.
+
+One example here would be a JSX plugin on top of a Javascript plugin. JSX is syntax made pobular by Facebook with its React framework. It allows for a HTML-like syntax as a normal Javascript expression, which is used by the framework to describe components to be rendered (see listing~\ref{lst:jsx} as example).
+
+\begin{lstlisting}[caption={Simple JSX view function}, captionpos=b, label=lst:jsx]
+function view(state) {
+    return (
+        <div>
+            <span>{ state.myValue }</span>
+        </div>
+    );
+}
+\end{lstlisting}
+
+The same syntax is also useful in Typescript, as Typescript is a typed superset of Javascript. So in an ideal case the JSX plugin should work without modifications with both source languages.
+
+As the used plugins are configured at runtime, the final AST definition is not known at runtime. A core plugin should be able to be used together with a extention plugin that was written after the core plugin without having to modify or recompile the core plugin.
+
+To allow this, the compiler only has one abstract data type (ADT) representing a grammar in  augmented Backus–Naur form (ABNF). The plugins provide grammar files that are then parsed by the compiler to construct the final AST (see section~\ref{sec:pack_pipeline}).
+
 \subsection{Classic compiler pipeline}
 
 A classic compiler is implemented as a pipeline of three to five distinct parts (see figure~\ref{fig:compiler_pipeline}).
@@ -46,6 +68,7 @@ A Parser then takes those tokens and a Chomsky type 2 grammar to parse an AST\@.
 In the code generation step, the AST is written into a target file, for Javascript this is another text file. Most of the time this also includes a minification step, where the compiler replaces names with short, obfuscated versions and omits as much whitespace as possible.
 
 \subsection{Pipeline used in pack.hs}
+\label{sec:pack_pipeline}
 
 The compiler described in this paper also uses a pipeline approach, but with different steps (see figure~\ref{fig:pack.hs_pipeline}).
 

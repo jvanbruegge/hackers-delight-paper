@@ -116,3 +116,39 @@ The compiler is written in Haskell, because of several advantages:
 \item{Parsing libraries for Haskell are feature-rich and very mature, this compiler uses \textit{Megaparsec}}
 
 \end{itemize}
+
+\subsection{Grammar parsing}
+
+To parse the grammar files, the compiler has an ADT representing the AST of a grammar (see listing~\ref{lst:adt_abnf}). The program then uses the \textit{Parser} Monad to pupulate an instance of the ADT.
+
+\begin{lstlisting}[linewidth=\columnwidth, caption={ADT of ABNF grammar}, captionpos=b, label=lst:adt_abnf, language=Haskell]
+newtype Grammar = Grammar [Rule]
+data Rule = Rule String Production
+newtype Production = Production [AlternativeTerm]
+newtype AlternativeTerm = AlternativeTerm [Term]
+data Term = Many PrimitiveTerm
+          | Many1 PrimitiveTerm
+          | Primitive PrimitiveTerm
+data PrimitiveTerm = Terminal String
+                   | NonTerminal String
+                   | Optional Production
+                   | Group Production
+                   | Repetition Int PrimitiveTerm
+                   | Identifier
+                   | Literal
+\end{lstlisting}
+
+As it can be seen above, the \textit{NonTerminal} constructor takes a String instead of a \textit{Rule}, because at rules may reference other rules that are not yet parsed. Initially, there was a matching step after the intial parse, which matched the strings with their respective rules, but the AST would then be a graph, which caused endless loops when trying to postprocess it. Because of this, the rules are matched on the fly by the parser of the source code (see listing~\ref{lst:grammar_match}).
+
+\begin{lstlisting}[linewidth=\columnwidth, caption={Rule matching while parsing}, captionpos=b, label=lst:adt_abnf, language=Haskell, breaklines=true]
+getRule :: Grammar -> String -> Rule
+getRule (Grammar rules) name = head $
+    filter (\(Rule n _) -> n == name) rules
+
+parseRule :: Rule -> Grammar -> Parser AST
+parseRule (Rule s (Production terms)) g = generateAlternatives terms s g
+
+generatePrimitive :: PrimitiveTerm -> Grammar -> Parser AST
+generatePrimitive (NonTerminal name) grammar =
+    parseRule (getRule grammar name) grammar
+\end{lstlisting}

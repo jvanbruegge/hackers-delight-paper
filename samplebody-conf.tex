@@ -4,9 +4,9 @@ In modern web development environments, you need to have at least two types of t
 
 \begin{itemize}
 
-\item{\textbf{Compilers:} As most browser vendors have not yet implemented the new ES6 standard natively and many developers want to use one of the numerous compile-to-javascript languages that are rising in popularity, you need a compiler to transform the source code into the ES5 Javascript standard, which most browser are able to execute. The most popular compilers are \textit{Babel} for ES6, \textit{TSC} for Typescript and \textit{purs} for Purescript.}
+    \item{\textbf{Compilers:} As most browser vendors have not yet implemented the new ES6 standard natively and many developers want to use one of the numerous compile-to-javascript languages that are rising in popularity, you need a compiler to transform the source code into the ES5 Javascript standard, which most browser are able to execute. The most popular compilers are \textit{Babel}\footnote{https://babeljs.io/} for ES6, \textit{TSC}\footnote{https://www.typescriptlang.org/} for Typescript and \textit{purs}\footnote{http://www.purescript.org/} for Purescript.}
 
-\item{\textbf{Bundlers:} Because until ES6 Javascript did not have a syntax to import modules for other source files and browser vendors have not yet implemented this syntax, you need bundlers that link your code together, provide dependencies and bootstrap your application. Some also generate the \textit{index.html} file with all assets linked or included. The most popular bundler is \textit{webpack}. Other solutions are \textit{rollup} and \textit{browserify}}
+    \item{\textbf{Bundlers:} Because Javascript did not have a syntax to import modules from other source files until ES6 and browser vendors have not yet implemented this new syntax, you need bundlers that link your code together, provide dependencies and bootstrap your application. Some also generate the \textit{index.html} file with all assets linked or included. The most popular bundler is \textit{webpack}\footnote{https://webpack.js.org/}. Other solutions are \textit{rollup}\footnote{https://rollupjs.org/} and \textit{browserify}\footnote{http://browserify.org/}}
 
 \end{itemize}
 
@@ -19,7 +19,7 @@ The seperation between those two creates a few problems:
 
 \item{It is not easy to use multiple lanugages, especially running tests written in multiple languages is hard as testing tools expect Javacript input}
 
-\item{New syntaxes have to be added to all languages individually, for example JSX which was introduced by Facebook and not usable in Typescript for a long time, because Facebook only implemented support in Babel}
+\item{New syntaxes have to be added to all languages individually, for example JSX \cite{jsx} which was introduced by Facebook and not usable in Typescript for a long time, because Facebook only implemented support in Babel}
 
 \end{itemize}
 
@@ -79,7 +79,7 @@ A classic compiler is implemented as a pipeline of three to five distinct parts 
 \label{fig:compiler_pipeline}
 \end{figure}
 
-The lexing step takes the source code to be parsed, together with a Chomsky type 3 grammar that is used to split the raw input string into a ordered set of tokens. This step can be left out, if the characters in the input string are seen as tokens individually.
+The lexing step takes the source code to be parsed, together with a Chomsky type 3 grammar \cite{chomsky} that is used to split the raw input string into a ordered set of tokens. This step can be left out, if the characters in the input string are seen as tokens individually.
 
 A Parser then takes those tokens and a Chomsky type 2 grammar to parse an AST\@. This AST can optionally be type checked before it is transformed into the target language. In the context of the web, this most likely Javascript.
 
@@ -111,15 +111,15 @@ The compiler is written in Haskell, because of several advantages:
 \item{Later in the project, the compiler can make use of the parallelism built into the Haskell runtime to compile multiple files at the same time.}
 \item{Haskell is a compiled language, so the final execution does not suffer performance hits introduced by parsing and interpreting}
 \item{Haskell's strong type system makes debugging code a lot easier, because most of the errors are already caught by the compiler}
-\item{GHCI, Haskell's interactive interpreting compiler allows to test functions in isolation before inserting them into the program}
+\item{GHCi, Haskell's interactive interpreting compiler allows to test functions in isolation before inserting them into the program}
 \item{The monadic approach and the accompanying \textit{do} notation make composing complex parsers out of simple ones easy}
-\item{Parsing libraries for Haskell are feature-rich and very mature, this compiler uses \textit{Megaparsec}}
+\item{Parsing libraries for Haskell are feature-rich and very mature, this compiler uses \textit{Megaparsec}\footnote{https://github.com/mrkkrp/megaparsec}}
 
 \end{itemize}
 
 \subsection{Grammar parsing}
 
-To parse the grammar files, the compiler has an ADT representing the AST of a grammar (see listing~\ref{lst:adt_abnf}). The program then uses the \textit{Parser} Monad to pupulate an instance of the ADT.
+To parse the grammar files, the compiler has an ADT representing the AST of a grammar (see listing~\ref{lst:adt_abnf}). The program then uses the \textit{Parser} Monad to populate an instance of the ADT.
 
 \begin{lstlisting}[linewidth=\columnwidth, caption={ADT of ABNF grammar}, captionpos=b, label=lst:adt_abnf, language=Haskell]
 newtype Grammar = Grammar [Rule]
@@ -138,7 +138,7 @@ data PrimitiveTerm = Terminal String
                    | Literal
 \end{lstlisting}
 
-As it can be seen above, the \textit{NonTerminal} constructor takes a String instead of a \textit{Rule}, because at rules may reference other rules that are not yet parsed. Initially, there was a matching step after the intial parse, which matched the strings with their respective rules, but the AST would then be a graph, which caused endless loops when trying to postprocess it. Because of this, the rules are matched on the fly by the parser of the source code (see listing~\ref{lst:grammar_match}).
+As it can be seen above, the \textit{NonTerminal} constructor takes a \textit{String} instead of a \textit{Rule}, because rules may reference other rules that are not yet parsed. Initially, there was a matching step after the intial parse, which matched the strings with their respective rules, but this maked the AST be a graph, which caused endless loops when trying to postprocess it. Because of this, the rules are matched on the fly by the parser of the source code (see listing~\ref{lst:grammar_match}).
 
 \begin{lstlisting}[linewidth=\columnwidth, caption={Rule matching while parsing}, captionpos=b, label=lst:grammar_match, language=Haskell, breaklines=true]
 getRule :: Grammar -> String -> Rule
@@ -155,7 +155,7 @@ generatePrimitive (NonTerminal name) grammar =
 
 \subsection{Code generation}
 
-The code generator features a minification step. In this step, all variable and function names are renamed to names that are as short as possible and only necessary whitespace is printed to the target file. The names for the minifier are generated by creating a cartesian product with increasing exponent over the alphaneric characters (see listing~\ref{lst:names}). The first character is choosen only from alphabetic character, because the syntax of Javascript requires this to distinquisch between number literals and indentifiers.
+The code generator features a minification step. In this step, all variable and function names are renamed with names that are as short as possible. Only necessary whitespace is printed to the target file. The names for the minifier are generated by creating a cartesian product with increasing exponent over the alphaneric characters (see listing~\ref{lst:names}). The first character is choosen only from alphabetic character, because the syntax of Javascript requires this to distinquish between number literals and indentifiers.
 
 \begin{lstlisting}[linewidth=\columnwidth, caption={Endless list of possible variable names}, captionpos=b, label=lst:names, language=Haskell, breaklines=true]
 letters :: [Char]
@@ -229,9 +229,9 @@ data Nodes = Function String [String]
 type JavascriptAST = GeneralAST Nodes
 \end{lstlisting}
 
-While this is a lot more typesafe than before, the issue now is how to add to the existing defintion of the AST?
+While this is a lot more typesafe than before, the issue now is how to add to the existing defintion of the AST.
 
-For this we can use the technique from \textit{Data types \`a la carte} to allow plugins to add new data types to the original defintion without modifying its source code (see listing~\ref{lst:a_la_carte}).
+For this we can use the technique from \textit{Data types \`a la carte} \cite{data_types} to allow plugins to add new data types to the original defintion without modifying its source code (see listing~\ref{lst:a_la_carte}).
 
 \begin{lstlisting}[linewidth=\columnwidth, caption={Addition to sum type using type operators}, captionpos=b, label=lst:a_la_carte, language=Haskell, breaklines=true]
 {-# LANGUAGE TypeOperators #-}
